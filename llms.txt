@@ -1,0 +1,24 @@
+# How Bumpy? (howbumpy.com)
+
+> How Bumpy? is a free, just-for-fun ride comfort meter that runs in the browser. Lay a phone flat on the seat of a train, tram, bus, car, plane or boat, tap Start, and it shows a live comfort gauge; at the end it gives a verdict, a timeline of the ride, the biggest jolts and a seasickness dose. It uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement: it is best for comparing your own rides with the same phone in the same spot. Never use it for safety, health or work-exposure decisions.
+
+How it works: the phone's motion sensor (the browser's devicemotion readings) is resampled onto an even grid, split into up-and-down (along gravity) and horizontal shaking, and weighted in the frequency domain with ISO 2631-1's Wk (vertical) and Wd (horizontal) comfort weightings, k = 1 on every axis. The result is one number in m/s², labelled with the standard's overlapping comfort descriptions (from "Not uncomfortable" under 0.315 m/s² to "Extremely uncomfortable" over 2 m/s²). Moments when the phone is picked up are detected from how fast the gravity direction swings and left out, as are gaps in the readings. The report also gives the roughest 5 seconds, the vibration dose value and crest factor, and a motion-sickness dose (Wf weighting) with the standard's rough rule for the share of adults it would make vomit.
+
+Output: a shareable 1080×1080 image card (which carries the "just for fun, not certified" line), a CSV of the resampled signals for a fresh ride, and a list of saved rides (up to 60) sortable smoothest or roughest first. A simulated sample tram ride shows the report on devices without a motion sensor.
+
+Privacy: everything is computed on the phone. Nothing is uploaded, no location is used, there are no cookies or analytics; saved rides stay in the browser's local storage. It is an installable PWA and works offline once opened.
+
+Technical: static files only (index.html, style.css, app.js, comfort.js for the maths, sw.js), MIT-licensed, no build step, no backend.
+
+## Links
+
+- [How Bumpy?](https://howbumpy.com/): the app itself, with how it works, its limits and an FAQ
+
+## Related
+
+- [Adam's Arcade](https://games.adamwoodland.com/): all of the author's free browser games and tools
+- [Adam Woodland](https://adamwoodland.com/): the author, an OT/ICS cybersecurity consultant; this site is a side project
+
+## Contact
+
+- webmaster@howbumpy.com

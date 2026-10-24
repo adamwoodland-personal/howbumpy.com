@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>How Bumpy? Ride comfort meter for trains, buses, cars and flights</title>
+<meta name="description" content="How bumpy was your train, bus, car or flight? Lay your phone on the seat for a live comfort gauge, the biggest jolts and a seasickness dose. Free and just for fun.">
+<link rel="canonical" href="https://howbumpy.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://howbumpy.com/">
+<meta property="og:site_name" content="How Bumpy?">
+<meta property="og:title" content="How Bumpy? How smooth was your ride?">
+<meta property="og:description" content="Lay your phone on the seat of a train, bus, car or plane and find out how bumpy the ride was. Free, just for fun, and it works offline.">
+<meta property="og:image" content="https://howbumpy.com/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="How Bumpy? A comfort gauge with the question: how smooth was your train, bus, car or flight?">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How Bumpy? How smooth was your ride?">
+<meta name="twitter:description" content="Lay your phone on the seat of a train, bus, car or plane and find out how bumpy the ride was. Free, just for fun, and it works offline.">
+<meta name="twitter:image" content="https://howbumpy.com/og-image.png">
+<meta name="theme-color" content="#0e141b">
+<meta name="apple-mobile-web-app-title" content="How Bumpy?">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="style.css">
+<script type="module" src="app.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "How Bumpy?",
+  "alternateName": "How Bumpy ride comfort meter",
+  "url": "https://howbumpy.com/",
+  "description": "Lay your phone on the seat of a train, tram, bus, car, plane or boat for a just-for-fun estimate of how comfortable the ride was: a live gauge, a verdict, the biggest jolts and a seasickness dose. It uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement.",
+  "applicationCategory": "UtilitiesApplication",
+  "operatingSystem": "Any (needs a phone or tablet with a motion sensor)",
+  "browserRequirements": "Requires JavaScript and a motion sensor",
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "image": "https://howbumpy.com/og-image.png",
+  "inLanguage": "en",
+  "author": { "@type": "Person", "name": "Adam Woodland", "url": "https://adamwoodland.com/" }
+}
+</script>
+<script type="application/ld+json" id="faqLd">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "How do I find out how bumpy my ride was?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Choose what you're riding and tap Start, then lay your phone flat on the seat within three seconds. Leave it still and tap Stop when you arrive. You get a verdict, a timeline of the ride, the biggest jolts and a seasickness dose." } },
+    { "@type": "Question", "name": "Can I use it on a plane to see how bumpy the flight was?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lay the phone flat on the seat (an empty one beside you is ideal) and tap Start. Once the page is open it keeps working in flight mode. Turbulence shows up as up-and-down and sideways shaking, the same as a rough road. It's just for fun: it can't tell you anything about how safe a flight is." } },
+    { "@type": "Question", "name": "Is it accurate?",
+      "acceptedAnswer": { "@type": "Answer", "text": "It's a fun estimate. It weights the shaking with the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument, phones differ, and it measures one spot. It's best for comparing your own rides, with the same phone in the same spot." } },
+    { "@type": "Question", "name": "Does it work on iPhone and Android?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes, in Safari, Chrome, Firefox or Edge. An iPhone asks for permission to use motion the first time you tap Start: tap Allow. Most laptops have no motion sensor, so try the sample ride there instead." } },
+    { "@type": "Question", "name": "Does it work without signal?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Open it once with a connection, and after that it loads and measures without one: in tunnels, at sea or in flight mode. To keep it handy, add it to your home screen: in Safari tap Share, then Add to Home Screen; in Chrome, choose Install app or Add to Home screen from the menu." } }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="top">
+  <div class="top-row">
+    <h1><img src="favicon.svg" alt="" width="34" height="34"> How Bumpy?</h1>
+    <!-- Phones: the saved rides and the explainer open as bottom sheets from here. -->
+    <div class="top-btns ph-only">
+      <button type="button" id="ridesBtn" class="pill" aria-haspopup="dialog" aria-controls="history" hidden>Rides <span id="ridesCount" class="count">0</span></button>
+      <button type="button" id="infoBtn" class="pill round" aria-haspopup="dialog" aria-controls="about" aria-label="How it works" title="How it works"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.5M12 7.6v.1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
+    </div>
+  </div>
+  <p class="tag">A ride comfort meter for trains, trams, buses, cars, planes and boats. Lay your phone on the seat and see.</p>
+  <p class="scope">Just for fun: it uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement.</p>
+</header>
+
+<main id="main">
+  <section id="setup" class="card">
+    <h2>What are you riding?</h2>
+    <div class="modes" id="modes" role="radiogroup" aria-label="Vehicle">
+      <button type="button" role="radio" data-mode="train"><span aria-hidden="true">🚆</span>Train</button>
+      <button type="button" role="radio" data-mode="tram"><span aria-hidden="true">🚊</span>Tram</button>
+      <button type="button" role="radio" data-mode="bus"><span aria-hidden="true">🚌</span>Bus</button>
+      <button type="button" role="radio" data-mode="car"><span aria-hidden="true">🚗</span>Car</button>
+      <button type="button" role="radio" data-mode="plane"><span aria-hidden="true">✈️</span>Plane</button>
+      <button type="button" role="radio" data-mode="boat"><span aria-hidden="true">⛴️</span>Boat</button>
+      <button type="button" role="radio" data-mode="other"><span aria-hidden="true">🧭</span>Other</button>
+    </div>
+    <label class="field">Name this ride <span class="opt">(optional)</span>
+      <input id="rideName" maxlength="60" autocomplete="off" placeholder="e.g. Ferny Grove line, 7:42 am">
+    </label>
+    <ol class="tips">
+      <li>Sit down and lay the phone flat on the seat, in the same spot each time so your rides compare fairly.</li>
+      <li>Tap Start: you get 3 seconds to put it down.</li>
+      <li>Leave it still, and tap Stop when you arrive.</li>
+    </ol>
+    <!-- .bar: the view's main action. On phones it is pinned to the bottom of the screen. -->
+    <div class="bar"><button type="button" id="startBtn" class="big go">Start measuring</button></div>
+    <p id="sensorMsg" class="msg" hidden></p>
+    <p class="alt">No motion sensor here? <button type="button" id="sampleBtn" class="linkish">See a sample tram ride</button></p>
+  </section>
+
+  <section id="rec" class="card rec" hidden>
+    <div id="countdown" class="countdown" hidden>
+      <p>Put the phone down</p>
+      <span id="countNum">3</span>
+    </div>
+    <div class="gauge">
+      <svg viewBox="0 0 220 130" aria-hidden="true">
+        <g id="gaugeArcs"></g>
+        <line id="needle" x1="110" y1="115" x2="110" y2="30" />
+        <circle cx="110" cy="115" r="6" class="hub" />
+      </svg>
+      <div class="gauge-read"><span id="nowVal">–</span> <small>m/s²</small></div>
+    </div>
+    <p class="now-label" id="nowLabel" aria-live="polite">Waiting for the first readings…</p>
+    <dl class="stats">
+      <div><dt>Time</dt><dd id="elapsed">0:00</dd></div>
+      <div><dt>Ride so far</dt><dd id="soFar">–</dd></div>
+      <div><dt>Biggest jolt</dt><dd id="joltNow">–</dd></div>
+    </dl>
+    <canvas id="liveChart" class="chart" aria-label="Comfort over the last two minutes"></canvas>
+    <p id="recStatus" class="status" aria-live="polite"></p>
+    <div class="bar"><button type="button" id="stopBtn" class="big stop">Stop</button></div>
+  </section>
+
+  <section id="report" class="card" hidden>
+    <p id="sampleBadge" class="badge" hidden>Sample ride (simulated tram)</p>
+    <p id="rMeta" class="meta"></p>
+    <h2 id="rVerdict" class="verdict"></h2>
+    <p class="verdict-num"><b id="rAv"></b> m/s² <span>overall, using ISO 2631-1's comfort weightings (a fun estimate, not a certified measurement)</span></p>
+    <div id="rScale" class="scale" aria-hidden="true"></div>
+    <dl class="grid">
+      <div><dt>Up and down</dt><dd id="rZ"></dd></div>
+      <div><dt>Side to side and front to back</dt><dd id="rH"></dd></div>
+      <div><dt>Roughest 5 seconds</dt><dd id="rWorst"></dd></div>
+      <div><dt>Biggest jolt</dt><dd id="rJolt"></dd></div>
+    </dl>
+    <p id="rNote" class="note" hidden></p>
+    <h3>Through the ride</h3>
+    <canvas id="rChart" class="chart" aria-label="Comfort through the ride, 5 seconds at a time"></canvas>
+    <!-- Inline on wide screens; a bottom sheet on phones, opened by Details. -->
+    <div id="rMore" class="sheet" aria-labelledby="rMoreTitle">
+      <div class="sheet-head ph-only"><span class="grip"></span><button type="button" class="sheet-x" aria-label="Close">✕</button></div>
+      <h2 id="rMoreTitle" class="ph-only">Ride details</h2>
+      <div id="rJoltsWrap">
+        <h3>Biggest jolts</h3>
+        <ol id="rJolts" class="jolts"></ol>
+      </div>
+      <h3>Seasickness dose</h3>
+      <p id="rSick"></p>
+      <details class="tech">
+        <summary>Technical details</summary>
+        <dl id="rTech"></dl>
+      </details>
+      <div class="sheet-actions ph-only">
+        <button type="button" class="act-img">Save image</button>
+        <button type="button" class="act-csv">Download data (CSV)</button>
+        <button type="button" class="act-del quiet" hidden>Delete this ride</button>
+      </div>
+    </div>
+    <div class="actions bar">
+      <button type="button" id="moreBtn" class="ph-only" aria-haspopup="dialog" aria-controls="rMore">Details</button>
+      <button type="button" id="shareBtn" class="ph-only">Save image</button>
+      <button type="button" id="imgBtn" class="wide-only act-img">Save image</button>
+      <button type="button" id="sendBtn" class="wide-only" hidden>Send</button>
+      <button type="button" id="csvBtn" class="wide-only act-csv">Download data (CSV)</button>
+      <button type="button" id="delBtn" class="wide-only act-del quiet" hidden>Delete this ride</button>
+      <button type="button" id="againBtn" class="go"><span class="wide-only">Measure another ride</span><span class="ph-only">New ride</span></button>
+    </div>
+  </section>
+
+  <section id="history" class="card sheet" aria-labelledby="histTitle" hidden>
+    <div class="sheet-head ph-only"><span class="grip"></span><button type="button" class="sheet-x" aria-label="Close">✕</button></div>
+    <div class="hist-head">
+      <h2 id="histTitle">Your rides</h2>
+      <label>Sort <select id="sortRides"><option value="new">Newest first</option><option value="smooth">Smoothest first</option><option value="rough">Roughest first</option></select></label>
+    </div>
+    <ul id="rideList" class="rides"></ul>
+    <p class="small">Saved in this browser only. <button type="button" id="delAllBtn" class="linkish">Delete all saved rides</button></p>
+  </section>
+
+  <section id="about" class="card about sheet" aria-labelledby="aboutTitle">
+    <div class="sheet-head ph-only"><span class="grip"></span><button type="button" class="sheet-x" aria-label="Close">✕</button></div>
+    <h2 id="aboutTitle">How it works</h2>
+    <h3>What the number means</h3>
+    <p>Your phone's motion sensor feels every shake. The page weights them with the comfort weightings published in ISO 2631-1:1997, the international standard on whole-body vibration: people feel up-and-down shaking most at about 4 to 12 times a second, and side-to-side or front-to-back swaying most at about once or twice a second. The result is one number in m/s² (metres per second squared). The standard gives a rough guide to how passengers react to it; these are its descriptions:</p>
+    <table class="bands">
+      <thead><tr><th>m/s²</th><th>ISO's description</th></tr></thead>
+      <tbody>
+        <tr><td>under 0.315</td><td><span class="dot b0"></span>Not uncomfortable</td></tr>
+        <tr><td>0.315 to 0.63</td><td><span class="dot b1"></span>A little uncomfortable</td></tr>
+        <tr><td>0.5 to 1</td><td><span class="dot b2"></span>Fairly uncomfortable</td></tr>
+        <tr><td>0.8 to 1.6</td><td><span class="dot b3"></span>Uncomfortable</td></tr>
+        <tr><td>1.25 to 2.5</td><td><span class="dot b4"></span>Very uncomfortable</td></tr>
+        <tr><td>over 2</td><td><span class="dot b5"></span>Extremely uncomfortable</td></tr>
+      </tbody>
+    </table>
+    <p>The ranges overlap on purpose, because people differ. Where two overlap, this page switches label halfway through the overlap. Comfort is about much more than vibration (noise, temperature, the seat, how you sit), and none of that is measured here.</p>
+    <h3>Where to put the phone</h3>
+    <p>Lay it flat on the seat, ideally in the same spot every time. Any way up is fine: the page works out which way is down. On your lap or in your hand, your body softens the shaking; standing, it measures the floor; either way the numbers aren't comparable with a phone on the seat. Picking the phone up spoils the reading, so those seconds are left out automatically, as is any time without readings, plus a couple of seconds after each break while the calculation settles.</p>
+    <p>Measuring stops by itself after two hours, or if the readings stop for five minutes.</p>
+    <h3>Seasickness</h3>
+    <p>ISO 2631-1 also gives a motion-sickness dose for slow up-and-down swaying, the kind boats make, and a rough rule for how many people that much motion would make vomit. It builds up over time, so it means most on rides of 20 minutes or more. Car sickness comes mostly from braking and cornering, which this dose doesn't count.</p>
+    <h3>Limits</h3>
+    <p>This is a bit of fun, not a measuring instrument. Your phone hasn't been calibrated or checked against a reference sensor, and phones differ, so compare rides from the same phone placed the same way rather than across phones. It measures one spot and only straight-line shaking, not rotation. "Up and down" means along gravity, so in a reclined seat or a vehicle that banks or pitches the split between up-and-down and sideways is approximate. Phones typically report motion about 60 times a second (each ride's technical details show the real rate): shaking faster than about half that rate isn't measured, and can even show up as slower shaking. The standard covers shaking up to 80 times a second. Jolt sizes are approximate, and a sensor can top out on a big knock. The standard itself is being revised. Never use these numbers for safety, health or work-exposure decisions.</p>
+    <h3>Privacy</h3>
+    <p>Everything is worked out on your phone. Nothing is uploaded, no location is used, and there are no cookies or analytics. Saved rides stay in this browser, and you can delete them all from the list of your rides.</p>
+    <h3 id="faq">Questions</h3>
+    <!-- Keep these word for word the same as the FAQPage JSON-LD in <head> (page-test.js checks). -->
+    <div class="faq">
+      <h4>How do I find out how bumpy my ride was?</h4>
+      <p>Choose what you're riding and tap Start, then lay your phone flat on the seat within three seconds. Leave it still and tap Stop when you arrive. You get a verdict, a timeline of the ride, the biggest jolts and a seasickness dose.</p>
+      <h4>Can I use it on a plane to see how bumpy the flight was?</h4>
+      <p>Yes. Lay the phone flat on the seat (an empty one beside you is ideal) and tap Start. Once the page is open it keeps working in flight mode. Turbulence shows up as up-and-down and sideways shaking, the same as a rough road. It's just for fun: it can't tell you anything about how safe a flight is.</p>
+      <h4>Is it accurate?</h4>
+      <p>It's a fun estimate. It weights the shaking with the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument, phones differ, and it measures one spot. It's best for comparing your own rides, with the same phone in the same spot.</p>
+      <h4>Does it work on iPhone and Android?</h4>
+      <p>Yes, in Safari, Chrome, Firefox or Edge. An iPhone asks for permission to use motion the first time you tap Start: tap Allow. Most laptops have no motion sensor, so try the sample ride there instead.</p>
+      <h4>Does it work without signal?</h4>
+      <p>Yes. Open it once with a connection, and after that it loads and measures without one: in tunnels, at sea or in flight mode. To keep it handy, add it to your home screen: in Safari tap Share, then Add to Home Screen; in Chrome, choose Install app or Add to Home screen from the menu.</p>
+    </div>
+    <!-- Phones hide the page footer, so its lines live here too. -->
+    <div class="sheet-foot ph-only">
+      <p><a href="https://games.adamwoodland.com/">More tools at Adam's Arcade</a> · <a href="https://adamwoodland.com/">Made by Adam Woodland</a></p>
+      <p class="note">Design, code and content developed with the assistance of AI (Anthropic Claude).</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot wide-only">
+  <p><a href="https://games.adamwoodland.com/">More tools at Adam's Arcade</a> · <a href="https://adamwoodland.com/">Made by Adam Woodland</a></p>
+  <p class="note">Design, code and content developed with the assistance of AI (Anthropic Claude).</p>
+</footer>
+<div id="scrim" class="scrim" hidden></div>
+</body>
+</html>
