@@ -35,7 +35,7 @@
   "name": "How Bumpy?",
   "alternateName": "How Bumpy ride comfort meter",
   "url": "https://howbumpy.com/",
-  "description": "Lay your phone on the seat of a train, tram, bus, car, plane or boat for a just-for-fun estimate of how comfortable the ride was: a live gauge, a verdict, the biggest jolts and a seasickness dose. It uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement.",
+  "description": "Lay your phone on the seat of a train, tram, bus, car, plane or boat, or clip it to a bike's handlebars, for a just-for-fun estimate of how comfortable the ride was: a live gauge, a verdict, the biggest jolts and a seasickness dose. It uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement.",
   "applicationCategory": "UtilitiesApplication",
   "operatingSystem": "Any (needs a phone or tablet with a motion sensor)",
   "browserRequirements": "Requires JavaScript and a motion sensor",
@@ -57,6 +57,8 @@
       "acceptedAnswer": { "@type": "Answer", "text": "Yes. Lay the phone flat on the seat (an empty one beside you is ideal) and tap Start. Once the page is open it keeps working in flight mode. Turbulence shows up as up-and-down and sideways shaking, the same as a rough road. It's just for fun: it can't tell you anything about how safe a flight is." } },
     { "@type": "Question", "name": "Is it accurate?",
       "acceptedAnswer": { "@type": "Answer", "text": "It's a fun estimate. It weights the shaking with the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument, phones differ, and it measures one spot. It's best for comparing your own rides, with the same phone in the same spot." } },
+    { "@type": "Question", "name": "Can I use it on a bike?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes: choose Bike and clip the phone firmly into a handlebar mount. It feels the handlebars rather than the saddle, so it's best for comparing bike rides with each other, such as which path or road is smoother. Quick leans into corners may be left out, like picking the phone up." } },
     { "@type": "Question", "name": "Does it work on iPhone and Android?",
       "acceptedAnswer": { "@type": "Answer", "text": "Yes, in Safari, Chrome, Firefox or Edge. An iPhone asks for permission to use motion the first time you tap Start: tap Allow. Most laptops have no motion sensor, so try the sample ride there instead." } },
     { "@type": "Question", "name": "Does it work without signal?",
@@ -75,7 +77,7 @@
       <button type="button" id="infoBtn" class="pill round" aria-haspopup="dialog" aria-controls="about" aria-label="How it works" title="How it works"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.5M12 7.6v.1" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     </div>
   </div>
-  <p class="tag">A ride comfort meter for trains, trams, buses, cars, planes and boats. Lay your phone on the seat and see.</p>
+  <p class="tag">A ride comfort meter for trains, trams, buses, cars, bikes, planes and boats. Lay your phone on the seat and see.</p>
   <p class="scope">Just for fun: it uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument and this isn't a certified measurement.</p>
 </header>
 
@@ -87,6 +89,7 @@
       <button type="button" role="radio" data-mode="tram"><span aria-hidden="true">🚊</span>Tram</button>
       <button type="button" role="radio" data-mode="bus"><span aria-hidden="true">🚌</span>Bus</button>
       <button type="button" role="radio" data-mode="car"><span aria-hidden="true">🚗</span>Car</button>
+      <button type="button" role="radio" data-mode="bike"><span aria-hidden="true">🚲</span>Bike</button>
       <button type="button" role="radio" data-mode="plane"><span aria-hidden="true">✈️</span>Plane</button>
       <button type="button" role="radio" data-mode="boat"><span aria-hidden="true">⛴️</span>Boat</button>
       <button type="button" role="radio" data-mode="other"><span aria-hidden="true">🧭</span>Other</button>
@@ -94,7 +97,8 @@
     <label class="field">Name this ride <span class="opt">(optional)</span>
       <input id="rideName" maxlength="60" autocomplete="off" placeholder="e.g. Ferny Grove line, 7:42 am">
     </label>
-    <ol class="tips">
+    <!-- app.js swaps these three for handlebar wording when Bike is chosen (TIPS). -->
+    <ol class="tips" id="tips">
       <li>Sit down and lay the phone flat on the seat, in the same spot each time so your rides compare fairly.</li>
       <li>Tap Start: you get 3 seconds to put it down.</li>
       <li>Leave it still, and tap Stop when you arrive.</li>
@@ -107,7 +111,7 @@
 
   <section id="rec" class="card rec" hidden>
     <div id="countdown" class="countdown" hidden>
-      <p>Put the phone down</p>
+      <p id="cdText">Put the phone down</p>
       <span id="countNum">3</span>
     </div>
     <div class="gauge">
@@ -203,7 +207,7 @@
     </table>
     <p>The ranges overlap on purpose, because people differ. Where two overlap, this page switches label halfway through the overlap. Comfort is about much more than vibration (noise, temperature, the seat, how you sit), and none of that is measured here.</p>
     <h3>Where to put the phone</h3>
-    <p>Lay it flat on the seat, ideally in the same spot every time. Any way up is fine: the page works out which way is down. On your lap or in your hand, your body softens the shaking; standing, it measures the floor; either way the numbers aren't comparable with a phone on the seat. Picking the phone up spoils the reading, so those seconds are left out automatically, as is any time without readings, plus a couple of seconds after each break while the calculation settles.</p>
+    <p>Lay it flat on the seat, ideally in the same spot every time. Any way up is fine: the page works out which way is down. On your lap or in your hand, your body softens the shaking; standing, it measures the floor; either way the numbers aren't comparable with a phone on the seat. On a bike, clip it firmly into a handlebar mount: it then feels the handlebars rather than the saddle, so compare bike rides with each other, and quick leans into corners may be left out like a pick-up. Picking the phone up spoils the reading, so those seconds are left out automatically, as is any time without readings, plus a couple of seconds after each break while the calculation settles.</p>
     <p>Measuring stops by itself after two hours, or if the readings stop for five minutes.</p>
     <h3>Seasickness</h3>
     <p>ISO 2631-1 also gives a motion-sickness dose for slow up-and-down swaying, the kind boats make, and a rough rule for how many people that much motion would make vomit. It builds up over time, so it means most on rides of 20 minutes or more. Car sickness comes mostly from braking and cornering, which this dose doesn't count.</p>
@@ -220,6 +224,8 @@
       <p>Yes. Lay the phone flat on the seat (an empty one beside you is ideal) and tap Start. Once the page is open it keeps working in flight mode. Turbulence shows up as up-and-down and sideways shaking, the same as a rough road. It's just for fun: it can't tell you anything about how safe a flight is.</p>
       <h4>Is it accurate?</h4>
       <p>It's a fun estimate. It weights the shaking with the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument, phones differ, and it measures one spot. It's best for comparing your own rides, with the same phone in the same spot.</p>
+      <h4>Can I use it on a bike?</h4>
+      <p>Yes: choose Bike and clip the phone firmly into a handlebar mount. It feels the handlebars rather than the saddle, so it's best for comparing bike rides with each other, such as which path or road is smoother. Quick leans into corners may be left out, like picking the phone up.</p>
       <h4>Does it work on iPhone and Android?</h4>
       <p>Yes, in Safari, Chrome, Firefox or Edge. An iPhone asks for permission to use motion the first time you tap Start: tap Allow. Most laptops have no motion sensor, so try the sample ride there instead.</p>
       <h4>Does it work without signal?</h4>

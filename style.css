@@ -242,7 +242,7 @@ body.recording .about, body.recording .foot { display: none; }
 @media (max-height: 540px) and (orientation: landscape) {
   .top { padding-top: 6px; }
   .scope { margin: 4px 0 8px; }
-  .modes { grid-template-columns: repeat(7, 1fr); }
+  .modes { grid-template-columns: repeat(8, 1fr); }
   .modes button { flex-direction: row; justify-content: center; gap: 4px; padding: 6px 2px; }
   .modes button span { font-size: 1.05rem; }
   .bar { padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom)); }

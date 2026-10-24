@@ -2,7 +2,7 @@
 import { analyse, emptyRecord, slice, BANDS, bandOf, G, SETTLE, synth, tramProfile } from './comfort.js';
 
 const $ = (id) => document.getElementById(id);
-const MODES = { train: ['🚆', 'Train'], tram: ['🚊', 'Tram'], bus: ['🚌', 'Bus'], car: ['🚗', 'Car'], plane: ['✈️', 'Plane'], boat: ['⛴️', 'Boat'], other: ['🧭', 'Ride'] };
+const MODES = { train: ['🚆', 'Train'], tram: ['🚊', 'Tram'], bus: ['🚌', 'Bus'], car: ['🚗', 'Car'], bike: ['🚲', 'Bike'], plane: ['✈️', 'Plane'], boat: ['⛴️', 'Boat'], other: ['🧭', 'Ride'] };
 const BAND_VARS = ['--b0', '--b1', '--b2', '--b3', '--b4', '--b5'];
 const RIDES_KEY = 'rcm-rides-v1', PREFS_KEY = 'rcm-prefs-v1';
 // Stop on our own, by the wall clock (performance.now), after two hours or after five minutes with no
@@ -89,9 +89,17 @@ function dragSheet(e) {
 }
 
 // ---------- mode picker ----------
+// Setup steps and countdown wording: on the seat for every vehicle except a bike, which needs a handlebar mount.
+const TIPS = {
+  seat: ['Sit down and lay the phone flat on the seat, in the same spot each time so your rides compare fairly.', 'Tap Start: you get 3 seconds to put it down.', 'Leave it still, and tap Stop when you arrive.', 'Put the phone down'],
+  bike: ['Clip the phone firmly into a handlebar mount. It feels the bars rather than the saddle, so compare bike rides with each other.', 'Tap Start: you get 3 seconds to clip it in.', 'Ride, and tap Stop when you finish. Quick leans into corners may be left out, like picking the phone up.', 'Clip the phone in'],
+};
 function setMode(m) {
   S.mode = MODES[m] ? m : 'train';
   for (const b of $('modes').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.mode === S.mode));
+  const t = TIPS[S.mode === 'bike' ? 'bike' : 'seat'];
+  $('tips').querySelectorAll('li').forEach((li, i) => { li.textContent = t[i]; });
+  $('cdText').textContent = t[3];
   store(PREFS_KEY, { ...load(PREFS_KEY, {}), mode: S.mode });
 }
 
@@ -405,7 +413,8 @@ function openReport(sum, analysis = null) {
     const pct = sum.msi < 0.1 ? 'under 0.1%' : sum.msi < 10 ? `about ${fmt(sum.msi, 1)}%` : `about ${fmt(sum.msi, 0)}%`;
     $('rSick').textContent = `Dose ${fmt(sum.msdv)} m/s^1.5${sickFor}. ISO 2631-1's rough rule says that much slow up-and-down motion would make ${pct} of adults vomit.`
       + ((sum.msdvSeconds || sum.duration) < 1200 ? ' The dose keeps building on longer rides, so it means most after 20 minutes or more.' : '')
-      + (sum.mode === 'car' || sum.mode === 'bus' ? ' Car sickness comes mostly from braking and cornering, which this dose doesn\'t count.' : '');
+      + (sum.mode === 'car' || sum.mode === 'bus' ? ' Car sickness comes mostly from braking and cornering, which this dose doesn\'t count.' : '')
+      + (sum.mode === 'bike' ? ' On a bike it means little: it is meant for passengers swaying slowly, as on a boat.' : '');
   }
   const tech = [
     ['Sampling', `${sum.fs} readings a second: shaking up to about ${Math.floor(sum.fs / 2)} times a second is measured; faster shaking isn't, and can show up as slower shaking (aliasing)`],
