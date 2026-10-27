@@ -8,7 +8,7 @@
 //  - Images/icons: CACHE-FIRST.
 //  - Bump CACHE on deploys that change any precached file (activate deletes
 //    every other cache version).
-const CACHE = 'hb-v3';
+const CACHE = 'hb-v4';
 const CORE = [
 	'/',
 	'/index.html',

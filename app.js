@@ -44,7 +44,7 @@ function show(view) {
 const PHONE = matchMedia('(max-width: 699.98px), (max-height: 540px)');
 // The content keeps clear of the pinned bar, however tall the bar turns out.
 function barHeight() {
-  const b = document.querySelector('main > section:not([hidden]) .bar');
+  const b = document.querySelector('main > section:not([hidden]) > .bar');
   document.body.style.setProperty('--bar-h', `${PHONE.matches && b ? b.offsetHeight : 0}px`);
 }
 let sheet = null; // { el, opener } while one is open
@@ -354,13 +354,13 @@ function scaleRows(av) {
   const lo = 0.1, hi = 4, pos = (v) => (Math.log(Math.max(lo, Math.min(hi, v)) / lo) / Math.log(hi / lo)) * 100;
   BANDS.forEach((b, i) => {
     const row = document.createElement('div'); row.className = 'row';
-    const bar = document.createElement('div'); bar.className = 'bar';
+    const seg = document.createElement('div'); seg.className = 'seg'; // not "bar": that is the pinned action bar on phones
     const a = pos(Math.max(lo, b.range[0])), z = pos(Math.min(hi, b.range[1]));
-    bar.style.left = `${a}%`; bar.style.width = `${z - a}%`; bar.style.background = bandColour(i);
+    seg.style.left = `${a}%`; seg.style.width = `${z - a}%`; seg.style.background = bandColour(i);
     const tag = document.createElement('span'); tag.textContent = b.label;
     if (i === bandOf(av)) tag.className = 'on';
     if (a > 50) tag.style.right = `${100 - a}%`; else tag.style.left = `${z}%`; // beside the bar, on the roomier side
-    row.append(bar, tag); box.appendChild(row);
+    row.append(seg, tag); box.appendChild(row);
   });
   const mark = document.createElement('div'); mark.className = 'mark'; mark.style.left = `${pos(av)}%`; box.appendChild(mark);
   const ticks = document.createElement('div'); ticks.className = 'ticks';
