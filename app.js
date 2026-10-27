@@ -89,15 +89,15 @@ function dragSheet(e) {
 }
 
 // ---------- mode picker ----------
-// Setup steps and countdown wording: on the seat for every vehicle except a bike, which needs a handlebar mount.
+// Setup steps and countdown wording: fixed in a holder or pocket for every vehicle except a bike, which needs a handlebar mount.
 const TIPS = {
-  seat: ['Sit down and lay the phone flat on the seat, in the same spot each time so your rides compare fairly.', 'Tap Start: you get 3 seconds to put it down.', 'Leave it still, and tap Stop when you arrive.', 'Put the phone down'],
+  fixed: ["Fix the phone in place so it can't slide or fall: in a phone holder or mount, a clamp on an armrest or tray table, or a seat-back pocket. Use the same spot each time so your rides compare fairly.", 'Tap Start: you get 3 seconds to settle it and take your hand away.', 'Leave it there, and tap Stop when you arrive.', 'Fix the phone in place'],
   bike: ['Clip the phone firmly into a handlebar mount. It feels the bars rather than the saddle, so compare bike rides with each other.', 'Tap Start: you get 3 seconds to clip it in.', 'Ride, and tap Stop when you finish. Quick leans into corners may be left out, like picking the phone up.', 'Clip the phone in'],
 };
 function setMode(m) {
   S.mode = MODES[m] ? m : 'train';
   for (const b of $('modes').querySelectorAll('button')) b.setAttribute('aria-checked', String(b.dataset.mode === S.mode));
-  const t = TIPS[S.mode === 'bike' ? 'bike' : 'seat'];
+  const t = TIPS[S.mode === 'bike' ? 'bike' : 'fixed'];
   $('tips').querySelectorAll('li').forEach((li, i) => { li.textContent = t[i]; });
   $('cdText').textContent = t[3];
   store(PREFS_KEY, { ...load(PREFS_KEY, {}), mode: S.mode });
@@ -302,7 +302,7 @@ function liveTick() {
   if (L.jolt > 0.3) $('joltNow').textContent = `${fmt(L.jolt / G)} g`;
   drawChart($('liveChart'), L.values, { offset: Math.max(0, elapsed - L.values.length) });
   let status = '';
-  if (r.handledNow) status = 'Phone moving: hold it still. These seconds are left out.';
+  if (r.handledNow) status = 'Phone moving: these seconds are left out.';
   else if (quiet > 1500) status = 'No motion readings right now. Keep this page open with the screen on.';
   else if (r.fs < 20) status = `This phone only reports motion ${r.fs} times a second: faster shaking isn't measured and may show up as slower shaking.`;
   $('recStatus').textContent = status;
@@ -318,7 +318,7 @@ function stop(reason) {
     const m = $('sensorMsg');
     m.textContent = r && r.error ? `${r.error} If it keeps happening, this phone's motion readings may not be usable here.`
       : reason === 'quiet' ? 'Measuring stopped on its own: no motion readings came through for five minutes (the screen may have gone off, or the page into the background), and there wasn\'t enough before that to measure.'
-      : r && r.excludedHandled > r.duration ? 'The phone was moving most of the time, so there wasn\'t enough to measure. Lay it down and leave it still.'
+      : r && r.excludedHandled > r.duration ? 'The phone was moving most of the time, so there wasn\'t enough to measure. Fix it in place, in a holder or pocket, and leave it there.'
       : `That was too short to measure. Leave it running for at least ${MIN_SECONDS + TRIM_START + TRIM_END + SETTLE.comfort} seconds.`;
     m.hidden = false;
     m.scrollIntoView({ block: 'nearest' });

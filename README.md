@@ -2,8 +2,8 @@
 
 **Live: <https://howbumpy.com/>**
 
-How bumpy was your train, tram, bus, car, bike, plane or boat? Lay your phone flat on the seat (or
-clip it to the handlebars), tap Start, and find out. A free, **just-for-fun** ride comfort meter
+How bumpy was your train, tram, bus, car, bike, plane or boat? Fix your phone in place (in a phone
+holder or mount, a seat-back pocket, or clipped to the handlebars), tap Start, and find out. A free, **just-for-fun** ride comfort meter
 that runs entirely in the browser.
 
 > It uses the comfort weightings from ISO 2631-1:1997, but a phone isn't a calibrated instrument

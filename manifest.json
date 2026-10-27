@@ -5,7 +5,7 @@
 	"categories": ["travel", "utilities"],
 	"name": "How Bumpy? Ride comfort meter",
 	"short_name": "How Bumpy?",
-	"description": "Lay your phone on the seat of a train, tram, bus, car, plane or boat, or clip it to a bike, and find out how bumpy the ride was. Just for fun; works offline.",
+	"description": "Fix your phone in a holder on a train, tram, bus, car, plane or boat, or clip it to a bike, and find out how bumpy the ride was. Just for fun; works offline.",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
