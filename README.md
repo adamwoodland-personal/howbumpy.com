@@ -36,6 +36,7 @@ that runs entirely in the browser.
    and left out.
 
 `app.js` runs the sensor, the live gauge, the report, saved rides, the share card and the CSV.
+`ride-worker.js` works out a finished ride off the page's main thread, so a long ride doesn't freeze the screen.
 `sw.js` caches the app for offline use.
 
 ## Privacy

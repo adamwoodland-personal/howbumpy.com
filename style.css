@@ -53,6 +53,7 @@ body.recording .scope { display: none; }
 .tips li { margin: 2px 0; }
 
 .big { display: block; width: 100%; padding: 16px; border: 0; border-radius: 14px; font-size: 1.15rem; font-weight: 700; }
+.big:disabled { opacity: 0.7; cursor: progress; } /* Stop while a finished ride is worked out */
 .go { background: var(--go); color: #062012; }
 .stop { background: var(--stop); color: #fff; margin-top: 16px; }
 .msg { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #3a2a14; color: #ffd9a8; }

@@ -8,13 +8,14 @@
 //  - Images/icons: CACHE-FIRST.
 //  - Bump CACHE on deploys that change any precached file (activate deletes
 //    every other cache version).
-const CACHE = 'hb-v4';
+const CACHE = 'hb-v5';
 const CORE = [
 	'/',
 	'/index.html',
 	'/style.css',
 	'/app.js',
 	'/comfort.js',
+	'/ride-worker.js',
 	'/favicon.svg',
 	'/manifest.json',
 	'/icon-192.png'

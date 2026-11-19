@@ -95,23 +95,26 @@ export function fft(re, im, inverse = false) {
 const pow2 = (n) => { let p = 1; while (p < n) p <<= 1; return p; };
 
 // Spectrum of up to two real channels packed as one complex signal (a + jb), zero-padded.
-function spectrum(a, b, n2) {
+// spectrum() and filtered() are exported for the tests only.
+export function spectrum(a, b, n2) {
   const re = new Float64Array(n2), im = new Float64Array(n2);
   re.set(a); if (b) im.set(b);
   fft(re, im);
   return { re, im, n2 };
 }
 // Apply a real filter to a packed spectrum and return the two filtered channels (first n samples).
-function filtered(spec, W, fs, n) {
+// DC and Nyquist (k = 0 and n2/2) are their own mirror bins: there the real part is channel a's value
+// and the imaginary part channel b's, so a complex response would mix the channels (and, with one
+// channel, leave part of it in the discarded imaginary output). Those two bins get the real gain |H|.
+export function filtered(spec, W, fs, n) {
   const { n2 } = spec, re = new Float64Array(spec.re), im = new Float64Array(spec.im);
   for (let k = 0; k <= n2 / 2; k++) {
     const H = response(W, (k * fs) / n2);
     let x = re[k], y = im[k];
+    if (k === 0 || k === n2 / 2) { const g = Math.hypot(H[0], H[1]); re[k] = x * g; im[k] = y * g; continue; }
     re[k] = x * H[0] - y * H[1]; im[k] = x * H[1] + y * H[0];
-    if (k > 0 && k < n2 / 2) { // mirror bin gets the conjugate, so the filter stays real
-      const m = n2 - k; x = re[m]; y = im[m];
-      re[m] = x * H[0] + y * H[1]; im[m] = y * H[0] - x * H[1];
-    }
+    const m = n2 - k; x = re[m]; y = im[m]; // mirror bin gets the conjugate, so the filter stays real
+    re[m] = x * H[0] + y * H[1]; im[m] = y * H[0] - x * H[1];
   }
   fft(re, im, true);
   return [re.subarray(0, n), im.subarray(0, n)];
@@ -155,10 +158,12 @@ const MAX_FILL = 3;
 
 // ---------- the analysis ----------
 // opts: trimStart / trimEnd (s) drop the ends; gap (s) is the largest step still treated as continuous;
-// live: true skips the motion-sickness, VDV and timeline work (for the once-a-second readout).
+// live: true skips the motion-sickness, VDV and timeline work (for the once-a-second readout);
+// progress: optional function, called now and then with the share done so far (0 to 1).
 // Returns null when there is too little to work with, { error } when the readings make no sense.
 export function analyse(rec, opts = {}) {
-  const { trimStart = 0, trimEnd = 0, gap = 0.5, live = false, tiltLimit = 30, settle = SETTLE } = opts;
+  const { trimStart = 0, trimEnd = 0, gap = 0.5, live = false, tiltLimit = 30, settle = SETTLE, progress = null } = opts;
+  const tell = (x) => { if (progress) progress(Math.min(1, x)); };
   const N0 = rec.t.length;
   if (N0 < 10) return null;
 
@@ -176,7 +181,8 @@ export function analyse(rec, opts = {}) {
   const N = keep.length, dropped = N0 - N;
   if (N < 10) return null;
   const keys = useLinear ? ['ix', 'iy', 'iz', 'lx', 'ly', 'lz'] : ['ix', 'iy', 'iz'];
-  const R = {}; for (const k of keys) R[k] = keep.map((i) => rec[k][i]);
+  // Only read from, so with nothing dropped the readings are used as they are rather than copied.
+  const R = {}; for (const k of keys) R[k] = dropped ? keep.map((i) => rec[k][i]) : rec[k];
   const t0 = rec.t[keep[0]], ts = new Float64Array(N);
   for (let i = 0; i < N; i++) ts[i] = (rec.t[keep[i]] - t0) / 1000;
   const dts = [];
@@ -227,6 +233,7 @@ export function analyse(rec, opts = {}) {
   }
   // Fill gap samples with the last good value so the smoothing below doesn't see zeros.
   for (let i = 0; i < M; i++) if (gapMask[i]) for (const k of keys) ch[k][i] = i ? ch[k][i - 1] : 0;
+  tell(0.1);
 
   // Gravity. With the OS's linear acceleration, gravity = including-gravity minus linear (sensor-fused,
   // so it follows tilts quickly and ignores braking); without it, a smoothed including-gravity vector.
@@ -266,6 +273,7 @@ export function analyse(rec, opts = {}) {
     h1[i] = hx * e1[0] + hy * e1[1] + hz * e1[2];
     h2[i] = hx * e2[0] + hy * e2[1] + hz * e2[2];
   }
+  tell(0.22);
 
   // Phone handling: the gravity direction swinging faster than tiltLimit deg/s. That is the phone
   // tilting; the vehicle turning is rotation about gravity and doesn't move it. Without the OS's
@@ -295,33 +303,40 @@ export function analyse(rec, opts = {}) {
     if (gapMask[i]) nGap++; else if (handled[i]) nHandled++;
     if (!gapMask[i] && !handled[i]) { valid[i] = 1; nValid++; }
   }
+  tell(0.3);
   const base = { fs, M, start, tg0: t0 + start * 1000, useLinear, dropped, gravity, clipped,
     excludedGap: nGap / fs, excludedHandled: nHandled / fs, handledNow: !!handled[M - 1] };
 
   // Weight each continuous stretch on its own, so nothing rings across a gap or a pick-up into the
   // readings either side, and leave out each stretch's settling time. `use` marks the samples counted
   // in the comfort figures and jolts; `useF` those counted in the motion-sickness dose.
+  // sfh: the horizontal motion through the same Wf weighting, only to judge whether a ride's slow motion
+  // was mostly up and down (the kind ISO's vomiting estimate was worked out for).
   const vz = new Float64Array(M), hx = new Float64Array(M), hy = new Float64Array(M);
   const jv = new Float64Array(M), jh1 = new Float64Array(M), jh2 = new Float64Array(M), vf = new Float64Array(M);
   const use = new Uint8Array(M), useF = new Uint8Array(M);
   const gC = Math.round(settle.comfort * fs), gF = Math.round(settle.sickness * fs);
   const pad = Math.round((live ? 10 : 60) * fs);
+  let sfh = 0;
   for (let a = 0; a < M;) {
     if (!valid[a]) { a++; continue; }
     let b = a; while (b < M && valid[b]) b++;
     const len = b - a;
     if (len > gC) {
+      const step = (k) => tell(0.3 + (0.65 * (a + (len * k) / 6)) / M); // six filters per stretch
       const seg = (x) => { let m = 0; for (let i = a; i < b; i++) m += x[i]; m /= len; const s = new Float64Array(len); for (let i = 0; i < len; i++) s[i] = x[a + i] - m; return s; };
       const n2 = pow2(len + pad);
       const sv = spectrum(seg(v), null, n2), sh = spectrum(seg(h1), seg(h2), n2);
-      const [z] = filtered(sv, WEIGHTINGS.Wk, fs, len); vz.set(z, a);
-      const [x1, x2] = filtered(sh, WEIGHTINGS.Wd, fs, len); hx.set(x1, a); hy.set(x2, a);
-      const [j0] = filtered(sv, JOLT, fs, len); jv.set(j0, a);
-      const [j1, j2] = filtered(sh, JOLT, fs, len); jh1.set(j1, a); jh2.set(j2, a);
+      const [z] = filtered(sv, WEIGHTINGS.Wk, fs, len); vz.set(z, a); step(1);
+      const [x1, x2] = filtered(sh, WEIGHTINGS.Wd, fs, len); hx.set(x1, a); hy.set(x2, a); step(2);
+      const [j0] = filtered(sv, JOLT, fs, len); jv.set(j0, a); step(3);
+      const [j1, j2] = filtered(sh, JOLT, fs, len); jh1.set(j1, a); jh2.set(j2, a); step(4);
       for (let i = a + gC; i < b; i++) use[i] = 1;
       if (!live && len > gF) {
-        const [f] = filtered(sv, WEIGHTINGS.Wf, fs, len); vf.set(f, a);
+        const [f] = filtered(sv, WEIGHTINGS.Wf, fs, len); vf.set(f, a); step(5);
         for (let i = a + gF; i < b; i++) useF[i] = 1;
+        const [f1, f2] = filtered(sh, WEIGHTINGS.Wf, fs, len); step(6);
+        for (let i = gF; i < len; i++) sfh += f1[i] * f1[i] + f2[i] * f2[i];
       }
     }
     a = b;
@@ -385,6 +400,9 @@ export function analyse(rec, opts = {}) {
   let sf = 0; for (let i = 0; i < M; i++) if (useF[i]) sf += vf[i] * vf[i];
   out.msdvSeconds = nUseF / fs;
   out.msdv = nUseF ? Math.sqrt(sf / fs) : null; out.msi = out.msdv == null ? null : out.msdv / 3;
+  // The same dose for the horizontal motion (both axes together): not an ISO quantity, only compared with
+  // msdv to tell whether the slow motion was mostly up and down.
+  out.msdvH = nUseF ? Math.sqrt(sfh / fs) : null;
 
   // Biggest jolts: the largest peaks at least 5 s apart.
   const order = [...secJ.keys()].filter((s) => secJi[s] >= 0).sort((a, b) => secJ[b] - secJ[a]);

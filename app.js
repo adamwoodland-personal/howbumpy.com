@@ -13,7 +13,7 @@ const TRIM_START = 1, TRIM_END = 2; // seconds dropped at each end (setting the 
 const MIN_SECONDS = 20;
 
 const S = {
-  mode: 'train', rec: null, listening: false, recording: false, starting: false, gotEvent: false,
+  mode: 'train', rec: null, listening: false, recording: false, starting: false, working: false, gotEvent: false,
   session: 0, startedAt: 0, lastT: -Infinity, lastEventAt: 0, tick: null, wake: null, live: null,
   report: null, cardBlob: null,
 };
@@ -308,11 +308,46 @@ function liveTick() {
   $('recStatus').textContent = status;
 }
 
+// ---------- working out a finished ride ----------
+// On a two-hour ride a slow phone takes several seconds over this (review 2026-11-19), so it runs in
+// ride-worker.js, off the page's main thread, and the screen keeps responding and shows progress. If the
+// worker can't start (an older browser without module workers, say) it runs here instead. Both run
+// comfort.js's analyse(), so the numbers are the same. `via` (test hook) says which one ran.
+let via = '';
+function analyseHere(rec, opts) {
+  via = 'page';
+  try { return analyse(rec, opts); } catch { return { error: 'The motion readings could not be turned into a result.' }; }
+}
+function analyseRide(rec, opts, onProgress) {
+  return new Promise((resolve) => {
+    let w;
+    try { w = new Worker(new URL('ride-worker.js', import.meta.url), { type: 'module' }); } catch { resolve(analyseHere(rec, opts)); return; }
+    let over = false;
+    const done = (r) => { if (over) return; over = true; w.terminate(); resolve(r); };
+    w.onmessage = (e) => { if ('progress' in e.data) onProgress(e.data.progress); else { via = 'worker'; done(e.data.result); } };
+    w.onerror = w.onmessageerror = (e) => { e.preventDefault(); if (!over) done(analyseHere(rec, opts)); };
+    // Typed copies go to the worker without being copied again; rec itself stays here for the fallback.
+    try {
+      const data = {}, buffers = [];
+      for (const k of Object.keys(rec)) { data[k] = Float64Array.from(rec[k]); buffers.push(data[k].buffer); }
+      w.postMessage({ rec: data, opts }, buffers);
+    } catch { done(analyseHere(rec, opts)); }
+  });
+}
+
 // reason: 'user' (Stop), 'limit' (two hours) or 'quiet' (no readings for five minutes).
-function stop(reason) {
+async function stop(reason) {
   const rec = S.rec;
   stopListening();
-  const r = rec && analyse(rec, { trimStart: TRIM_START, trimEnd: TRIM_END });
+  S.rec = null;
+  // Say so before any of the work starts, and let the screen show it.
+  S.working = true;
+  const btn = $('stopBtn');
+  btn.disabled = true; btn.textContent = 'Working out your ride…'; $('recStatus').textContent = '';
+  await new Promise((res) => (document.hidden ? setTimeout(res, 0) : requestAnimationFrame(() => setTimeout(res, 0))));
+  const r = rec && await analyseRide(rec, { trimStart: TRIM_START, trimEnd: TRIM_END }, (p) => { $('recStatus').textContent = `${Math.round(p * 100)}% done`; });
+  S.working = false;
+  btn.disabled = false; btn.textContent = 'Stop'; $('recStatus').textContent = '';
   if (!r || r.error || !Number.isFinite(r.av) || !(r.duration >= MIN_SECONDS)) {
     show('setup');
     const m = $('sensorMsg');
@@ -341,7 +376,7 @@ function summarise(r, { mode, name, sample, stopped }) {
     duration: r.duration, span: r.span, av: r.av, awz: r.awz, awh: r.awh, band: r.band,
     worst5: r.worst5, worst5From: r.worst5From, worst5To: r.worst5To, peakJolt: r.peakJolt, jolts: r.jolts,
     vdv: r.vdv, doseSeconds: r.doseSeconds, crest: r.crest, crestAxis: r.crestAxis,
-    msdv: r.msdv, msi: r.msi, msdvSeconds: r.msdvSeconds, fs: r.fs,
+    msdv: r.msdv, msi: r.msi, msdvSeconds: r.msdvSeconds, msdvH: r.msdvH, fs: r.fs,
     excludedGap: r.excludedGap, excludedHandled: r.excludedHandled, excludedSettle: r.excludedSettle,
     useLinear: r.useLinear, gravity: r.gravity, clipped: r.clipped, dropped: r.dropped,
     timeline: tl.values, step: tl.step, offset: r.start,
@@ -410,11 +445,20 @@ function openReport(sum, analysis = null) {
   const sickFor = sum.msdvSeconds ? ` over the ${human(sum.msdvSeconds)} usable for it` : '';
   if (sum.msdv == null) $('rSick').textContent = 'Not enough continuous readings for a seasickness dose.';
   else {
-    const pct = sum.msi < 0.1 ? 'under 0.1%' : sum.msi < 10 ? `about ${fmt(sum.msi, 1)}%` : `about ${fmt(sum.msi, 0)}%`;
-    $('rSick').textContent = `Dose ${fmt(sum.msdv)} m/s^1.5${sickFor}. ISO 2631-1's rough rule says that much slow up-and-down motion would make ${pct} of adults vomit.`
-      + ((sum.msdvSeconds || sum.duration) < 1200 ? ' The dose keeps building on longer rides, so it means most after 20 minutes or more.' : '')
-      + (sum.mode === 'car' || sum.mode === 'bus' ? ' Car sickness comes mostly from braking and cornering, which this dose doesn\'t count.' : '')
-      + (sum.mode === 'bike' ? ' On a bike it means little: it is meant for passengers swaying slowly, as on a boat.' : '');
+    // ISO 2631-1's share who may vomit (MSDV / 3 %, Annex D) comes from Lawther & Griffin (1987): vertical
+    // oscillation below 0.5 Hz, at sea and in the laboratory. So it is given only where a ride looks like
+    // that: not a car, bus or bike; 20 minutes or more of usable readings, as the dose keeps building; and
+    // slow motion mostly up and down (the Wf-weighted vertical dose at least the horizontal one, msdvH;
+    // rides saved before that was measured have none). The figure is rounded and stops at "more than 30%",
+    // as a straight-line rule can't keep growing (reviews 2026-11-19). Saved rides follow the same rules.
+    const pct = sum.msi < 1 ? 'under 1%' : sum.msi > 30 ? 'more than 30%' : `about ${Math.round(sum.msi)}%`;
+    $('rSick').textContent = `Dose ${fmt(sum.msdv)} m/s^1.5${sickFor}. ` + (
+      sum.mode === 'car' || sum.mode === 'bus' ? 'Car sickness comes mostly from braking and cornering, which this dose doesn\'t count, so it isn\'t turned into a share of people who would be sick.'
+      : sum.mode === 'bike' ? 'On a bike it means little: it is meant for passengers swaying slowly, as on a boat, so it isn\'t turned into a share of people who would be sick.'
+      : (sum.msdvSeconds || sum.duration) < 1200 ? 'The dose keeps building over a ride, so ISO 2631-1\'s rough rule for how many adults would vomit is only given here after 20 minutes or more.'
+      : sum.msdvH == null ? 'This ride was saved before the page checked which way its slow swaying went, so no share of people who would be sick is given.'
+      : sum.msdv < sum.msdvH ? 'Most of this ride\'s slow swaying was sideways or front to back, and ISO 2631-1\'s rough rule for how many adults would vomit only covers slow up-and-down motion, so no share is given.'
+      : `ISO 2631-1's rough rule says that much slow up-and-down motion would make ${pct} of adults vomit.`);
   }
   const tech = [
     ['Sampling', `${sum.fs} readings a second: shaking up to about ${Math.floor(sum.fs / 2)} times a second is measured; faster shaking isn't, and can show up as slower shaking (aliasing)`],
@@ -426,7 +470,8 @@ function openReport(sum, analysis = null) {
     ['Up and down, Wk', `${fmt(sum.awz, 3)} m/s²`],
     ['Horizontal, Wd', `${fmt(sum.awh, 3)} m/s²`],
     ['Total (weighted)', `${fmt(sum.av, 3)} m/s²`],
-    ['Vibration dose value', `${fmt(sum.vdv)} m/s^1.75${sum.doseSeconds ? ` over ${human(sum.doseSeconds)}` : ''}`],
+    // VDV adds each horizontal axis's fourth power, and those axes are the phone's own (review 2026-11-19).
+    ['Vibration dose value', `${fmt(sum.vdv)} m/s^1.75${sum.doseSeconds ? ` over ${human(sum.doseSeconds)}` : ''}; it changes with which way the phone faces, so compare it only between rides with the phone square to the vehicle and facing the same way`],
     ['Crest factor', `${fmt(sum.crest, 1)}${sum.crestAxis ? ` (sharpest axis: ${sum.crestAxis})` : ' (up and down only, older ride)'}`],
     ['Motion sickness dose, Wf', sum.msdv == null ? 'not enough continuous readings' : `${fmt(sum.msdv, 3)} m/s^1.5${sickFor}`],
     ['Method', 'The frequency weightings of ISO 2631-1:1997 (Wk, Wd, Wf), applied to each continuous stretch of readings, k = 1 on every axis. "Up and down" means along gravity, so in a reclined seat or a banking vehicle the split is approximate. A just-for-fun estimate from a phone: not calibrated, validated or certified, and not a measurement to ISO 2631.'],
@@ -546,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setMode(load(PREFS_KEY, {}).mode || 'train');
   $('modes').addEventListener('click', (e) => { const b = e.target.closest('button[data-mode]'); if (b) setMode(b.dataset.mode); });
   $('startBtn').addEventListener('click', start);
-  $('stopBtn').addEventListener('click', () => (S.recording ? stop('user') : (stopListening(), show('setup'))));
+  $('stopBtn').addEventListener('click', () => (S.working ? null : S.recording ? stop('user') : (stopListening(), show('setup'))));
   $('sampleBtn').addEventListener('click', sample);
   $('againBtn').addEventListener('click', () => { $('sensorMsg').hidden = true; show('setup'); });
   $('sortRides').addEventListener('change', renderHistory);
@@ -598,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Test hook: the page's own state and maths, for ReferenceFiles/howbumpy/page-test.js.
-window.__RCM = { S, analyse, LIMITS, stop: () => stop('user') };
+window.__RCM = { S, analyse, LIMITS, stop: () => stop('user'), get via() { return via; } };
 
 // Offline support (sw.js). Optional: the page works without it.
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
